@@ -1,5 +1,6 @@
 ﻿using ApplicationIO;
 using DoDoCung.Properties;
+using DoDoCung.Service;
 using DoDoCung.Utilities;
 using PLC_Communication;
 using PLC_Communication.NET.Mitsubishi;
@@ -64,12 +65,23 @@ namespace DoDoCung
             { 6, "BS" },
             // thêm nếu có nữa
         };
+
+        BindingList<string>ListMahang = new BindingList<string> {};
+        double Spec_Max_D1 = 0, Spec_Min_D1 = 0, Spec_Max_D2 = 0, Spec_Min_D2 = 0, Spec_Max_D3 = 0, Spec_Min_D3 = 0, Spec_MaxSubMin=0;
+        int Spec_Sodiemdo = 0;
+        bool Select_MaxSubMin=false, Select_DoMau=false;
+
+
         public frmDDC()
         {
             InitializeComponent();
             this.KeyPreview = true;
             timer1.Enabled = true;
         }
+
+
+
+
         private void frmDDC_Load(object sender, EventArgs e)
         {
             CheckConnectPLC();
@@ -106,10 +118,10 @@ namespace DoDoCung
             cbComR3.DataSource = PortName6;
             List<int> Baudrate6 = new List<int> { 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200 };
             cbBaudrateR3.DataSource = Baudrate6;
-            List<string> CbMahangSet = new List<string> { "1182", "3849", "7768", "AFFB", "9181", "BS", "TEST" };
-            cbMahangSet.DataSource = CbMahangSet;
-            List<string> CbMahangrun = new List<string> { "1182", "3849", "7768", "AFFB", "9181", "BS", "TEST" };
-            cbMahangrun.DataSource = CbMahangrun;
+
+            cbMahangSet.DataSource = ListMahang;
+            cbMahangrun.DataSource = ListMahang;
+
             List<int> CbSodiemdo = new List<int> { 1, 3 };
             cbSodiemdo.DataSource = CbSodiemdo;
 
@@ -588,6 +600,56 @@ namespace DoDoCung
             //DialogResult result = MessageBox.Show("Khởi động lại phần mềm sau khi cài đặt", "ĐÃ LƯU");
             AskForRestart();
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            ReadListMaHang();
+        }
+
+
+
+        //================================Xu ly mã hang và spec==================================================
+
+        LocalDatabaseProcess _LocalDatabaseMaHang = new LocalDatabaseProcess();
+        DataTable tableMaHang;
+        private void ReadListMaHang()
+        {
+           tableMaHang = _LocalDatabaseMaHang.getData_TableMaHang();
+           int countRow = tableMaHang.Rows.Count;
+            ListMahang.Clear();
+            for (int i=0;i< countRow; i++)
+            {
+                ListMahang.Add(tableMaHang.Rows[i][1].ToString());
+            }
+        }
+
+        private void LoadSpecMaHang(int index)
+        {
+
+            Spec_Max_D1 = double.Parse(tableMaHang.Rows[index][2].ToString());
+            Spec_Min_D1 = double.Parse(tableMaHang.Rows[index][3].ToString());
+            Spec_Max_D2 = double.Parse(tableMaHang.Rows[index][4].ToString());
+            Spec_Min_D2 = double.Parse(tableMaHang.Rows[index][5].ToString());
+            Spec_Max_D3 = double.Parse(tableMaHang.Rows[index][6].ToString());
+            Spec_Min_D3 = double.Parse(tableMaHang.Rows[index][7].ToString());
+            Spec_Sodiemdo = int.Parse(tableMaHang.Rows[index][8].ToString());
+            Spec_MaxSubMin = double.Parse(tableMaHang.Rows[index][9].ToString()); 
+            Select_MaxSubMin = bool.Parse(tableMaHang.Rows[index][10].ToString()); 
+            Select_DoMau = bool.Parse(tableMaHang.Rows[index][11].ToString());
+            tbSpecMaxD1.Text = Spec_Max_D1.ToString();
+            tbSpecMinD1.Text = Spec_Min_D1.ToString();
+            tbSpecMaxD2.Text = Spec_Max_D2.ToString();
+            tbSpecMinD2.Text = Spec_Min_D2.ToString();
+            tbSpecMaxD3.Text = Spec_Max_D3.ToString();
+            tbSpecMinD3.Text = Spec_Min_D3.ToString();
+            tbMax_Min.Text = Spec_MaxSubMin.ToString();
+            cbSodiemdo.Text = Spec_Sodiemdo.ToString();
+            cbSellectMax_Min.Checked = Select_MaxSubMin;
+            
+        }
+
+
+
         private void btSavespec_Click(object sender, EventArgs e)
         {
             string maHang = cbMahangSet.Text.Trim();  // Lấy mã hàng người dùng chọn hoặc nhập
@@ -651,32 +713,11 @@ namespace DoDoCung
         }
         private void cbMahangSet_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string _SpecMaxD1 = INIFile.READ_iniFile(pathFileSpec, cbMahangSet.Text, "Spec_Max_D1");   // Load DD 6
-            tbSpecMaxD1.Text = _SpecMaxD1;
-            string _SpecMinD1 = INIFile.READ_iniFile(pathFileSpec, cbMahangSet.Text, "Spec_Min_D1");   // Load DD 6
-            tbSpecMinD1.Text = _SpecMinD1;
-            string _SpecMaxD2 = INIFile.READ_iniFile(pathFileSpec, cbMahangSet.Text, "Spec_Max_D2");   // Load DD 6
-            tbSpecMaxD2.Text = _SpecMaxD2;
-            string _SpecMinD2 = INIFile.READ_iniFile(pathFileSpec, cbMahangSet.Text, "Spec_Min_D2");   // Load DD 6
-            tbSpecMinD2.Text = _SpecMinD2;
-            string _SpecMaxD3 = INIFile.READ_iniFile(pathFileSpec, cbMahangSet.Text, "Spec_Max_D3");   // Load DD 6
-            tbSpecMaxD3.Text = _SpecMaxD3;
-            string _SpecMinD3 = INIFile.READ_iniFile(pathFileSpec, cbMahangSet.Text, "Spec_Min_D3");   // Load DD 6
-            tbSpecMinD3.Text = _SpecMinD3;
-            string _SpecMax_Min = INIFile.READ_iniFile(pathFileSpec, cbMahangSet.Text, "Spec_Max_Min");
-            tbMax_Min.Text = _SpecMax_Min;
-            string _SpecSodiemdo = INIFile.READ_iniFile(pathFileSpec, cbMahangSet.Text, "Spec_Sodiemdo");
-            cbSodiemdo.Text = _SpecSodiemdo;
-            string _SelectCheck = INIFile.READ_iniFile(pathFileSpec, cbMahangSet.Text, "Select_Check");
-            int ab = int.Parse(_SelectCheck);
-            if (ab == 1)
-            {
-                cbSellectMax_Min.Checked = true;
-            }
-            else
-            {
-                cbSellectMax_Min.Checked = false;
-            }
+            ComboBox bb = (ComboBox)sender;
+
+            LoadSpecMaHang(bb.SelectedIndex);
+
+            
 
         }
 

@@ -33,6 +33,7 @@
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.tabSelect = new System.Windows.Forms.TabControl();
             this.tabMain = new System.Windows.Forms.TabPage();
+            this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.groupBox11 = new System.Windows.Forms.GroupBox();
             this.label43 = new System.Windows.Forms.Label();
             this.label36 = new System.Windows.Forms.Label();
@@ -99,8 +100,13 @@
             this.label56 = new System.Windows.Forms.Label();
             this.label57 = new System.Windows.Forms.Label();
             this.tabSpec = new System.Windows.Forms.TabPage();
-            this.btSavespec = new System.Windows.Forms.Button();
+            this.button1 = new System.Windows.Forms.Button();
+            this.txb_MaHangMoi = new System.Windows.Forms.TextBox();
+            this.label42 = new System.Windows.Forms.Label();
             this.grSpec = new System.Windows.Forms.GroupBox();
+            this.Chb_ChekcMau = new System.Windows.Forms.CheckBox();
+            this.label41 = new System.Windows.Forms.Label();
+            this.btSavespec = new System.Windows.Forms.Button();
             this.cbSodiemdo = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
             this.cbSellectMax_Min = new System.Windows.Forms.CheckBox();
@@ -164,11 +170,9 @@
             this.label5 = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
             this.label40 = new System.Windows.Forms.Label();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.label41 = new System.Windows.Forms.Label();
-            this.Chb_ChekcMau = new System.Windows.Forms.CheckBox();
             this.tabSelect.SuspendLayout();
             this.tabMain.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.groupBox11.SuspendLayout();
             this.groupBox10.SuspendLayout();
             this.groupBox9.SuspendLayout();
@@ -186,7 +190,6 @@
             this.grb_PLC.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.panel2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
             // contextMenuStrip1
@@ -232,6 +235,14 @@
             this.tabMain.TabIndex = 0;
             this.tabMain.Text = "Main";
             this.tabMain.UseVisualStyleBackColor = true;
+            // 
+            // dataGridView1
+            // 
+            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView1.Location = new System.Drawing.Point(875, 244);
+            this.dataGridView1.Name = "dataGridView1";
+            this.dataGridView1.Size = new System.Drawing.Size(987, 489);
+            this.dataGridView1.TabIndex = 137;
             // 
             // groupBox11
             // 
@@ -945,6 +956,9 @@
             // 
             // tabSpec
             // 
+            this.tabSpec.Controls.Add(this.button1);
+            this.tabSpec.Controls.Add(this.txb_MaHangMoi);
+            this.tabSpec.Controls.Add(this.label42);
             this.tabSpec.Controls.Add(this.grSpec);
             this.tabSpec.Controls.Add(this.cbMahangSet);
             this.tabSpec.Controls.Add(this.label11);
@@ -956,18 +970,36 @@
             this.tabSpec.Text = "Spec";
             this.tabSpec.UseVisualStyleBackColor = true;
             // 
-            // btSavespec
+            // button1
             // 
-            this.btSavespec.BackColor = System.Drawing.Color.Blue;
-            this.btSavespec.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btSavespec.ForeColor = System.Drawing.Color.Transparent;
-            this.btSavespec.Location = new System.Drawing.Point(1098, 231);
-            this.btSavespec.Name = "btSavespec";
-            this.btSavespec.Size = new System.Drawing.Size(165, 69);
-            this.btSavespec.TabIndex = 76;
-            this.btSavespec.Text = "Lưu Cài Đặt";
-            this.btSavespec.UseVisualStyleBackColor = false;
-            this.btSavespec.Click += new System.EventHandler(this.btSavespec_Click);
+            this.button1.BackColor = System.Drawing.Color.Blue;
+            this.button1.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button1.ForeColor = System.Drawing.Color.Transparent;
+            this.button1.Location = new System.Drawing.Point(1248, 146);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(165, 39);
+            this.button1.TabIndex = 88;
+            this.button1.Text = "Thêm Mã Hàng";
+            this.button1.UseVisualStyleBackColor = false;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // txb_MaHangMoi
+            // 
+            this.txb_MaHangMoi.Font = new System.Drawing.Font("Arial", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txb_MaHangMoi.Location = new System.Drawing.Point(1008, 150);
+            this.txb_MaHangMoi.Name = "txb_MaHangMoi";
+            this.txb_MaHangMoi.Size = new System.Drawing.Size(219, 32);
+            this.txb_MaHangMoi.TabIndex = 88;
+            // 
+            // label42
+            // 
+            this.label42.AutoSize = true;
+            this.label42.Font = new System.Drawing.Font("Arial", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label42.Location = new System.Drawing.Point(839, 153);
+            this.label42.Name = "label42";
+            this.label42.Size = new System.Drawing.Size(163, 27);
+            this.label42.TabIndex = 71;
+            this.label42.Text = "Mã Hàng Mới:";
             // 
             // grSpec
             // 
@@ -1000,6 +1032,38 @@
             this.grSpec.TabIndex = 70;
             this.grSpec.TabStop = false;
             this.grSpec.Text = "Tiêu Chuẩn Đánh Giá";
+            // 
+            // Chb_ChekcMau
+            // 
+            this.Chb_ChekcMau.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Chb_ChekcMau.Location = new System.Drawing.Point(215, 244);
+            this.Chb_ChekcMau.Name = "Chb_ChekcMau";
+            this.Chb_ChekcMau.Size = new System.Drawing.Size(17, 18);
+            this.Chb_ChekcMau.TabIndex = 87;
+            this.Chb_ChekcMau.UseVisualStyleBackColor = true;
+            // 
+            // label41
+            // 
+            this.label41.AutoSize = true;
+            this.label41.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label41.Location = new System.Drawing.Point(52, 241);
+            this.label41.Name = "label41";
+            this.label41.Size = new System.Drawing.Size(134, 22);
+            this.label41.TabIndex = 86;
+            this.label41.Text = "Đo Check Mẫu";
+            // 
+            // btSavespec
+            // 
+            this.btSavespec.BackColor = System.Drawing.Color.Blue;
+            this.btSavespec.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btSavespec.ForeColor = System.Drawing.Color.Transparent;
+            this.btSavespec.Location = new System.Drawing.Point(1098, 231);
+            this.btSavespec.Name = "btSavespec";
+            this.btSavespec.Size = new System.Drawing.Size(165, 69);
+            this.btSavespec.TabIndex = 76;
+            this.btSavespec.Text = "Lưu Cài Đặt";
+            this.btSavespec.UseVisualStyleBackColor = false;
+            this.btSavespec.Click += new System.EventHandler(this.btSavespec_Click);
             // 
             // cbSodiemdo
             // 
@@ -1619,33 +1683,6 @@
             this.label40.Text = "MÁY ĐO ĐỘ CỨNG";
             this.label40.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // dataGridView1
-            // 
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Location = new System.Drawing.Point(875, 244);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.Size = new System.Drawing.Size(987, 489);
-            this.dataGridView1.TabIndex = 137;
-            // 
-            // label41
-            // 
-            this.label41.AutoSize = true;
-            this.label41.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label41.Location = new System.Drawing.Point(52, 241);
-            this.label41.Name = "label41";
-            this.label41.Size = new System.Drawing.Size(134, 22);
-            this.label41.TabIndex = 86;
-            this.label41.Text = "Đo Check Mẫu";
-            // 
-            // Chb_ChekcMau
-            // 
-            this.Chb_ChekcMau.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Chb_ChekcMau.Location = new System.Drawing.Point(215, 244);
-            this.Chb_ChekcMau.Name = "Chb_ChekcMau";
-            this.Chb_ChekcMau.Size = new System.Drawing.Size(17, 18);
-            this.Chb_ChekcMau.TabIndex = 87;
-            this.Chb_ChekcMau.UseVisualStyleBackColor = true;
-            // 
             // frmDDC
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1662,6 +1699,7 @@
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyDown);
             this.tabSelect.ResumeLayout(false);
             this.tabMain.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.groupBox11.ResumeLayout(false);
             this.groupBox11.PerformLayout();
             this.groupBox10.ResumeLayout(false);
@@ -1694,7 +1732,6 @@
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -1838,6 +1875,9 @@
         private System.Windows.Forms.CheckBox Chb_ChekcMau;
         private System.Windows.Forms.Label label41;
         private System.Windows.Forms.Label label40;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.TextBox txb_MaHangMoi;
+        private System.Windows.Forms.Label label42;
     }
 }
 
