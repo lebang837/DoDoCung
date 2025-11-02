@@ -11,6 +11,7 @@ using System.Data;
 using System.Drawing;
 using System.IO.Ports;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -23,11 +24,11 @@ namespace DoDoCung
 {
     public partial class frmDDC : Form
     {
-        MCProtocol_3E4E cmd_PLC = new MCProtocol_3E4E(CPUType.MELSEC_Q_L, FrameTypeE.Frame_3E, "192.168.1.30", 5010, System.Net.Sockets.ProtocolType.Tcp) { cmdCode = CmdCode.ASCIICode, WaitDataTimeout=500 };
+        MCProtocol_3E4E cmd_PLC = new MCProtocol_3E4E(CPUType.MELSEC_Q_L, FrameTypeE.Frame_3E, "192.168.1.30", 5010, System.Net.Sockets.ProtocolType.Tcp) { cmdCode = CmdCode.ASCIICode, WaitDataTimeout=500, SocketReceiveTimeout = 100 };
         string pathFileSetting = AppDomain.CurrentDomain.BaseDirectory + @"FILE\SettingFile.ini";
         string pathFileSpec = AppDomain.CurrentDomain.BaseDirectory + @"FILE\SpecFile.ini";
         short DATA_MODEL = 0;
-        private double value_D1 = 0, value_D2 = 0, value_D3 = 0, value_D4 = 0, value_D5 = 0, value_D6 = 0;
+        private double? value_D1 = 0, value_D2 = 0, value_D3 = 0, value_D4 = 0, value_D5 = 0, value_D6 = 0;
         int kQsanpham1;
         int kQsanpham2;
         int kQ_L1;
@@ -51,7 +52,9 @@ namespace DoDoCung
         int OKMeasure = 0;
         int NGMeasure = 0;
         int NGMaxMinMeasure = 0;
-
+        string MaHangCurrent = "";
+        string ResultTruc1 = "";
+        string ResultTruc2 = "";
 
 
         DoCungMeter Meter01, Meter02, Meter03, Meter04, Meter05, Meter06;
@@ -69,14 +72,20 @@ namespace DoDoCung
         BindingList<string>ListMahang = new BindingList<string> {};
         double Spec_Max_D1 = 0, Spec_Min_D1 = 0, Spec_Max_D2 = 0, Spec_Min_D2 = 0, Spec_Max_D3 = 0, Spec_Min_D3 = 0, Spec_MaxSubMin=0;
         int Spec_Sodiemdo = 0;
-        bool Select_MaxSubMin=false, Select_DoMau=false;
-
+        bool Spec_Select_MaxSubMin=false, Spec_Select_DoMau=false;
+        DataTable tableLogData = new DataTable();
+        int CounterProduction = 0;
+        double max_L1, min_L1, max_L3, min_L3, max_L2, min_L2;
+        double max_R3, min_R3, max_R2, min_R2, max_R1, min_R1;
+        int AU_Sodiemdo;
+        double AU_MaxSubMin;
+        bool AU_Select_MaxSubMin, AU_Select_DoMau;
 
         public frmDDC()
         {
             InitializeComponent();
             this.KeyPreview = true;
-            timer1.Enabled = true;
+           
         }
 
 
@@ -84,6 +93,7 @@ namespace DoDoCung
 
         private void frmDDC_Load(object sender, EventArgs e)
         {
+            ReadListMaHang();
             CheckConnectPLC();
             statusLabels = new Label[] { lbDD1status, lbDD2status, lbDD3status, lbDD4status, lbDD5status, lbDD6status };
             ports = new SerialPort[6];
@@ -132,57 +142,71 @@ namespace DoDoCung
             Meter05 = new DoCungMeter(ports[04]);
             Meter06 = new DoCungMeter(ports[05]);
 
-
+            tableLogData = SetColumnsHeaderName(new List<string> { "STT", "MaHang", "DateTime", "Result", "P1", "P2", "P3" });
+            dataGridView1.DataSource = tableLogData;
+            timer1.Enabled = true; //Bắt đầu quét PLC
         }
+        string[] data_string_plc;
+
+
         private async void timer1_Tick(object sender, EventArgs e)
         {
-            
             timer1.Enabled = false;
+            string[] dataHex;
+            string[] sttModel;
+            Task<(string[], string[], string[])> taskReadPLC = new Task<(string[], string[], string[])>(() =>
+            {
+                string[] _data_string_plc = cmd_PLC.BatchReads(DataFormat.Word, DeviceCode.D, 4500, 30);
+                string[] _dataHex = new string[] { "1" };// cmd_PLC.BatchReads(DataFormat.Word, DeviceCode.D, 4510, 16);
+                string[] _sttModel = new string[] { "1" };// = cmd_PLC.BatchReads(DataFormat.Word, DeviceCode.D, 4540, 1);
+                return (_data_string_plc, _dataHex, _sttModel);
+            });
+             taskReadPLC.Start();
+            await taskReadPLC;
+
+
+            (data_string_plc , dataHex, sttModel) = taskReadPLC.Result;
             short[] _data_int_PLC = new short[20];
-            string[] _data_string_plc = cmd_PLC.BatchReads(DataFormat.Word, DeviceCode.D, 4500, 10);
-            if (_data_string_plc != null && _data_string_plc.Length == 10)
+            if (data_string_plc != null && data_string_plc.Length == 30)
             {
-                _data_int_PLC = cmd_PLC.HexaToArrayInt16(_data_string_plc);
+                _data_int_PLC = cmd_PLC.HexaToArrayInt16(data_string_plc);
             }
 
-
-            
-
-            string[] dataHex = cmd_PLC.BatchReads(DataFormat.Word, DeviceCode.D, 4510, 16);
-            if (dataHex != null && dataHex.Length > 0)
-            {
-                string lotName = ConvertPLCWordsToString(dataHex);
-                cbLot.Text = lotName; // Hiển thị lên Label
-            }
-            string[] sttModel = cmd_PLC.BatchReads(DataFormat.Word, DeviceCode.D, 4540, 1);
-            if (sttModel != null && sttModel.Length == 1)
-            {
-                short[] _sttModel = cmd_PLC.HexaToArrayInt16(sttModel);
-                DATA_MODEL = _sttModel[0];
-                if (modelMapping.TryGetValue(DATA_MODEL, out string modelName))
-                {
-                    cbMahangrun.Text = modelName; // hiển thị mã hàng tương ứng
-                }
-                else
-                {
-                    cbMahangrun.Text = ""; // hoặc ""
-                }
-            }
             await Doc_XyLy_DoCung(_data_int_PLC[0], _data_int_PLC[2]);
+
+
+
+            //Load Mã Hàng Từ PLC
+            //if (dataHex != null && dataHex.Length > 0)
+            //{
+            //    string lotName = ConvertPLCWordsToString(dataHex);
+            //    MaHangCurrent = lotName;
+            //    cbLot.Text = MaHangCurrent;     //Hiển thị lên Label
+            //}
+
+
+            //
+            //if (sttModel != null && sttModel.Length == 1)
+            //{
+            //    short[] _sttModel = cmd_PLC.HexaToArrayInt16(sttModel);
+            //    DATA_MODEL = _sttModel[0];
+            //    if (modelMapping.TryGetValue(DATA_MODEL, out string modelName))
+            //    {
+            //        cbMahangrun.Text = modelName; // hiển thị mã hàng tương ứng
+            //    }
+            //    else
+            //    {
+            //        cbMahangrun.Text = ""; // hoặc ""
+            //    }
+            //}
+
 
             timer1.Enabled = true;
         }
 
-        //if (_data_int_PLC[0] == 1)
-        //    {
-        //        GaugesAsync1 = TriggerGaugesAsync1();
-        //    }
-        //    if (_data_int_PLC[2] == 1)
-        //    {
-        //        GaugesAsync2 = TriggerGaugesAsync2();
-        //    }
         private async Task Doc_XyLy_DoCung(short PLC_0, short PLC_2)
         {
+            if (PLC_0 != 1 && PLC_2 != 1) return;
             Task<int> GaugesAsync1 = null;
             Task<int> GaugesAsync2 = null;
             if (PLC_0 == 1)
@@ -202,45 +226,37 @@ namespace DoDoCung
             if (taskList.Count > 0)
             {
                 results = await Task.WhenAll(taskList);
-                // results[0] = result của gauge 1 (nếu có)
-                // results[1] = result của gauge 2 (nếu có)
-            }
-
-            //Phản hồi Cho PLC kết quả
-            if (results[0] == 3) cmd_PLC.BatchWrites(DataFormat.Word, DeviceCode.D, 4500, new ushort[] { 2, 3 });
-            else if (results[0] == 1) cmd_PLC.BatchWrites(DataFormat.Word, DeviceCode.D, 4500, new ushort[] { 2, 1 });
-            else if (results[0] == 2) cmd_PLC.BatchWrites(DataFormat.Word, DeviceCode.D, 4500, new ushort[] { 2, 2 });
-
-            if (results[1] == 3) cmd_PLC.BatchWrites(DataFormat.Word, DeviceCode.D, 4502, new ushort[] { 2, 3 });
-            else if (results[1] == 1) cmd_PLC.BatchWrites(DataFormat.Word, DeviceCode.D, 4502, new ushort[] { 2, 1 });
-            else if (results[1] == 2) cmd_PLC.BatchWrites(DataFormat.Word, DeviceCode.D, 4502, new ushort[] { 2, 2 });
-        }
-
-
-        private string ConvertPLCWordsToString(string[] dataHex)
-        {
-            StringBuilder sb = new StringBuilder();
-
-            foreach (string hexWord in dataHex)
+            if (PLC_0 == 1)
             {
-                if (hexWord.Length >= 4)
-                {
-                    // Tách 2 byte
-                    string lowByte = hexWord.Substring(0, 2);
-                    string highByte = hexWord.Substring(2, 2);
-
-                    // Chuyển từng byte thành ký tự ASCII
-                    char c1 = (char)Convert.ToInt32(highByte, 16);
-                    char c2 = (char)Convert.ToInt32(lowByte, 16);
-
-                    sb.Append(c1);
-                    sb.Append(c2);
+                    if (results[0] == 3) { cmd_PLC.BatchWrites(DataFormat.Word, DeviceCode.D, 4500, new ushort[] { 2, 3 }); ResultTruc1 = "RECHECK"; }
+                    else if (results[0] == 1) { cmd_PLC.BatchWrites(DataFormat.Word, DeviceCode.D, 4500, new ushort[] { 2, 1 }); ResultTruc1 = "OK"; }
+                    else if (results[0] == 2) { cmd_PLC.BatchWrites(DataFormat.Word, DeviceCode.D, 4500, new ushort[] { 2, 2 }); ResultTruc1 = "NG"; }
                 }
+                CounterProduction++;
+                tableLogData.Rows.Add(new string[] { CounterProduction.ToString(), MaHangCurrent.ToString(), DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"), ResultTruc1, value_D1?.ToString("0.0000"), value_D2?.ToString("0.0000"), value_D3?.ToString("0.0000") });
             }
 
-            // Loại bỏ ký tự rỗng hoặc NULL ở cuối (nếu có)
-            return sb.ToString().Trim('\0', ' ');
+            if (PLC_2 == 1 )
+            {
+                int res = -1;
+                if (PLC_0 != 1) res= results[0];
+                if (PLC_0 == 1) res = results[1];
+
+                if (res == 3) {cmd_PLC.BatchWrites(DataFormat.Word, DeviceCode.D, 4502, new ushort[] { 2, 3 }); ResultTruc2 = "RECHECK";}
+                else if (res == 1) {cmd_PLC.BatchWrites(DataFormat.Word, DeviceCode.D, 4502, new ushort[] { 2, 1 }); ResultTruc2 = "OK";}
+                else if (res == 2) {cmd_PLC.BatchWrites(DataFormat.Word, DeviceCode.D, 4502, new ushort[] { 2, 2 }); ResultTruc2 = "NG"; }
+                CounterProduction++;
+                tableLogData.Rows.Add(new string[] { CounterProduction.ToString(), MaHangCurrent.ToString(), DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"), ResultTruc2, value_D4?.ToString("0.0000"), value_D5?.ToString("0.0000"), value_D6?.ToString("0.0000") });
+            }
+                
+
+            
+
+
         }
+
+
+        
         private async void btTest_Click(object sender, EventArgs e)
         {
             Doc_XyLy_DoCung(1, 1);
@@ -249,9 +265,9 @@ namespace DoDoCung
         private async Task<int> TriggerGaugesAsync1()  // Hàm chung đo 3 bộ đo — có thể gọi từ PLC hoặc nút Test tay
         {
         
-            Task<double?> task_Meter01 = new Task<double?>(() => Meter01._Read_Data(1000));
-            Task<double?> task_Meter02 = new Task<double?>(() => Meter02._Read_Data(1000));
-            Task<double?> task_Meter03 = new Task<double?>(() => Meter03._Read_Data(1000));
+            Task<double?> task_Meter01 = new Task<double?>(() => Meter01._Read_Data(500));
+            Task<double?> task_Meter02 = new Task<double?>(() => Meter02._Read_Data(500));
+            Task<double?> task_Meter03 = new Task<double?>(() => Meter03._Read_Data(500));
 
             statusReadD1 = statusReadD2 = statusReadD3 = false;  // Reset trạng thái đọc
             kQ_L1 = kQ_L2 = kQ_L3 = 0;
@@ -275,9 +291,11 @@ namespace DoDoCung
             }
             else
             {
-                double max_D1 = double.Parse(tbMaxD1_Main.Text, System.Globalization.CultureInfo.InvariantCulture);
-                double min_D1 = double.Parse(tbMinD1_Main.Text, System.Globalization.CultureInfo.InvariantCulture);
-                if (value_D1 >= min_D1 && value_D1 < max_D1)
+                value_D1 = task_Meter01.Result;
+                value_D2 = task_Meter02.Result;
+                value_D3 = task_Meter02.Result;
+
+                if (value_D1 >= min_L1 && value_D1 < max_L1)
                 {
                     kQ_L1 = 1;
                 }
@@ -286,9 +304,8 @@ namespace DoDoCung
                     kQ_L1 = 2;
                 }
 
-                double max_D3 = double.Parse(tbMaxD3_Main.Text, System.Globalization.CultureInfo.InvariantCulture);
-                double min_D3 = double.Parse(tbMinD3_Main.Text, System.Globalization.CultureInfo.InvariantCulture);
-                if (value_D3 >= min_D3 && value_D3 < max_D3)
+                
+                if (value_D3 >= min_L3 && value_D3 < max_L3)
                 {
                     kQ_L3 = 1;
                 }
@@ -298,9 +315,8 @@ namespace DoDoCung
                 }
 
 
-                double max_D2 = double.Parse(tbMaxD2_Main.Text, System.Globalization.CultureInfo.InvariantCulture);
-                double min_D2 = double.Parse(tbMinD2_Main.Text, System.Globalization.CultureInfo.InvariantCulture);
-                if (value_D2 >= min_D2 && value_D2 < max_D2)
+              
+                if (value_D2 >= min_L2 && value_D2 < max_L2)
                 {
                     kQ_L2 = 1;
                 }
@@ -346,7 +362,7 @@ namespace DoDoCung
             Task<double?> task_Meter05 = new Task<double?>(() => Meter05._Read_Data(1000));
             Task<double?> task_Meter06 = new Task<double?>(() => Meter06._Read_Data(1000));
 
-
+           
 
             statusReadD4 = statusReadD5 = statusReadD6 = false;  // Reset trạng thái đọc
             kQ_R1 = kQ_R2 = kQ_R3 = 0;
@@ -355,12 +371,15 @@ namespace DoDoCung
             kQsanpham2 = 0;
             lbKetquaR.Text = "Measure";
             lbKetquaR.ForeColor = Color.Blue;
-            totalMeasure++;  // 👉 Tăng số lần đo
-            tbTotal.Text = totalMeasure.ToString();
+            Console.WriteLine("Start Thread");
+            
             task_Meter04.Start(); // Gửi lệnh trigger đồng thời
             task_Meter05.Start();
             task_Meter06.Start();
+            Console.WriteLine("Cho Thread");
             double?[] uuu = await Task.WhenAll(task_Meter04, task_Meter05, task_Meter06); // Chờ cả 3 cùng hoàn thành (hoặc timeout trong từng ReadGauge)
+            Console.WriteLine("Da CHay Xong Thread");
+            
             if (task_Meter04.Result == null || task_Meter05.Result == null || task_Meter06.Result == null ||!ports[3].IsOpen || !ports[4].IsOpen || !ports[5].IsOpen)  // Quá 20 lần mà không nhận được → MISS
             {
                 lbKetquaR.Text = "MISS";
@@ -370,10 +389,10 @@ namespace DoDoCung
             }
             else
             {
-
-                double max_D3 = double.Parse(tbMaxD3_Main.Text, System.Globalization.CultureInfo.InvariantCulture);
-                double min_D3 = double.Parse(tbMinD3_Main.Text, System.Globalization.CultureInfo.InvariantCulture);
-                if (value_D6 > min_D3 && value_D6 < max_D3)
+                value_D4 = task_Meter04.Result;
+                value_D5 = task_Meter05.Result;
+                value_D6 = task_Meter06.Result;
+                if (value_D6 > min_R3 && value_D6 < max_R3)
                 {
                     kQ_R3 = 1;
                 }
@@ -382,9 +401,8 @@ namespace DoDoCung
                     kQ_R3 = 2;
                 }
 
-                double max_D2 = double.Parse(tbMaxD2_Main.Text, System.Globalization.CultureInfo.InvariantCulture);
-                double min_D2 = double.Parse(tbMinD2_Main.Text, System.Globalization.CultureInfo.InvariantCulture);
-                if (value_D5 > min_D2 && value_D5 < max_D2)
+                
+                if (value_D5 > min_R2 && value_D5 < max_R2)
                 {
                     kQ_R2 = 1;
                 }
@@ -393,9 +411,8 @@ namespace DoDoCung
                     kQ_R2 = 2;
                 }
 
-                double max_D1 = double.Parse(tbMaxD1_Main.Text, System.Globalization.CultureInfo.InvariantCulture);
-                double min_D1 = double.Parse(tbMinD1_Main.Text, System.Globalization.CultureInfo.InvariantCulture);
-                if (value_D4 > min_D1 && value_D4 < max_D1)
+                
+                if (value_D4 > min_R1 && value_D4 < max_R1)
                 {
                     kQ_R1 = 1;
                 }
@@ -415,8 +432,10 @@ namespace DoDoCung
                 }
             }
 
+            totalMeasure++;  // 👉 Tăng số lần đo
+            tbTotal.Text = totalMeasure.ToString();
             UIUpdate_KquaR1R2R3();
-
+         
             if (kQsanpham2 == 1)
             {
                 OKMeasure++;  // 👉 Tăng số lần đo
@@ -437,9 +456,9 @@ namespace DoDoCung
         }
         private void UIUpdate_KquaL1L2L3()
         {
-            tbKetquaL1.Text=value_D1.ToString("0.000");
-            tbKetquaL2.Text = value_D2.ToString("0.000");
-            tbKetquaL3.Text = value_D3.ToString("0.000");
+            tbKetquaL1.Text=value_D1?.ToString("0.000");
+            tbKetquaL2.Text = value_D2?.ToString("0.000");
+            tbKetquaL3.Text = value_D3?.ToString("0.000");
 
             int?[] kqValues = { kQ_L1, kQ_L2, kQ_L3 };
             Label[] labels = { lbKq_L1, lbKq_L2, lbKq_L3 };
@@ -459,9 +478,9 @@ namespace DoDoCung
         }
         private void UIUpdate_KquaR1R2R3()
         {
-            tbKetquaR1.Text = value_D4.ToString("0.000");
-            tbKetquaR2.Text = value_D5.ToString("0.000");
-            tbKetquaR3.Text = value_D6.ToString("0.000");
+            tbKetquaR1.Text = value_D4?.ToString("0.000");
+            tbKetquaR2.Text = value_D5?.ToString("0.000");
+            tbKetquaR3.Text = value_D6?.ToString("0.000");
 
             int?[] kqValues = { kQ_R1, kQ_R2, kQ_R3 };
             Label[] labels = { lbKq_R1, lbKq_R2, lbKq_R3 };
@@ -478,9 +497,33 @@ namespace DoDoCung
                     labels[i].Text = "NG";
                 }
             }
+
         }
-        
-       
+
+        private string ConvertPLCWordsToString(string[] dataHex)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            foreach (string hexWord in dataHex)
+            {
+                if (hexWord.Length >= 4)
+                {
+                    // Tách 2 byte
+                    string lowByte = hexWord.Substring(0, 2);
+                    string highByte = hexWord.Substring(2, 2);
+
+                    // Chuyển từng byte thành ký tự ASCII
+                    char c1 = (char)Convert.ToInt32(highByte, 16);
+                    char c2 = (char)Convert.ToInt32(lowByte, 16);
+
+                    sb.Append(c1);
+                    sb.Append(c2);
+                }
+            }
+
+            // Loại bỏ ký tự rỗng hoặc NULL ở cuối (nếu có)
+            return sb.ToString().Trim('\0', ' ');
+        }
         private void ConnectAllDevices() //kiểm tra kết nối bộ đo
         {
             string Content = "";
@@ -542,6 +585,13 @@ namespace DoDoCung
                 };
             }
         }
+        private void btCheckconnect_Click(object sender, EventArgs e)
+        {
+            CheckConnectPLC();
+        }
+
+
+        #region ================Setup COM========================
         private void tabSelect_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (tabSelect.SelectedTab.TabIndex == 2)
@@ -577,10 +627,7 @@ namespace DoDoCung
             }
         }
 
-        private void btCheckconnect_Click(object sender, EventArgs e)
-        {
-            CheckConnectPLC();
-        }
+        
         private void btSaveST_Click(object sender, EventArgs e)
         {
             INIFile.WRITE_iniFile(pathFileSetting, "PLC", "IP_plc", tbIPplc.Text);        // Save IP PLC
@@ -601,14 +648,9 @@ namespace DoDoCung
             AskForRestart();
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            ReadListMaHang();
-        }
-
-
-
-        //================================Xu ly mã hang và spec==================================================
+        #endregion
+        
+        #region ================================Xu ly mã hang và spec==================================================
 
         LocalDatabaseProcess _LocalDatabaseMaHang = new LocalDatabaseProcess();
         DataTable tableMaHang;
@@ -634,8 +676,8 @@ namespace DoDoCung
             Spec_Min_D3 = double.Parse(tableMaHang.Rows[index][7].ToString());
             Spec_Sodiemdo = int.Parse(tableMaHang.Rows[index][8].ToString());
             Spec_MaxSubMin = double.Parse(tableMaHang.Rows[index][9].ToString()); 
-            Select_MaxSubMin = bool.Parse(tableMaHang.Rows[index][10].ToString()); 
-            Select_DoMau = bool.Parse(tableMaHang.Rows[index][11].ToString());
+            Spec_Select_MaxSubMin = bool.Parse(tableMaHang.Rows[index][10].ToString()); 
+            Spec_Select_DoMau = bool.Parse(tableMaHang.Rows[index][11].ToString());
             tbSpecMaxD1.Text = Spec_Max_D1.ToString();
             tbSpecMinD1.Text = Spec_Min_D1.ToString();
             tbSpecMaxD2.Text = Spec_Max_D2.ToString();
@@ -644,12 +686,10 @@ namespace DoDoCung
             tbSpecMinD3.Text = Spec_Min_D3.ToString();
             tbMax_Min.Text = Spec_MaxSubMin.ToString();
             cbSodiemdo.Text = Spec_Sodiemdo.ToString();
-            cbSellectMax_Min.Checked = Select_MaxSubMin;
-            
+            cbSellectMax_Min.Checked = Spec_Select_MaxSubMin;
+            Chb_ChekcMau.Checked = Spec_Select_DoMau;
         }
-
-
-
+     
         private void btSavespec_Click(object sender, EventArgs e)
         {
             string maHang = cbMahangSet.Text.Trim();  // Lấy mã hàng người dùng chọn hoặc nhập
@@ -676,23 +716,10 @@ namespace DoDoCung
             // Nếu đến đây là hợp lệ → tiến hành lưu dữ liệu
             try
             {
-                INIFile.WRITE_iniFile(pathFileSpec, cbMahangSet.Text, "Spec_Max_D1", tbSpecMaxD1.Text);
-                INIFile.WRITE_iniFile(pathFileSpec, cbMahangSet.Text, "Spec_Min_D1", tbSpecMinD1.Text);
-                INIFile.WRITE_iniFile(pathFileSpec, cbMahangSet.Text, "Spec_Max_D2", tbSpecMaxD2.Text);
-                INIFile.WRITE_iniFile(pathFileSpec, cbMahangSet.Text, "Spec_Min_D2", tbSpecMinD2.Text);
-                INIFile.WRITE_iniFile(pathFileSpec, cbMahangSet.Text, "Spec_Max_D3", tbSpecMaxD3.Text);
-                INIFile.WRITE_iniFile(pathFileSpec, cbMahangSet.Text, "Spec_Min_D3", tbSpecMinD3.Text);
-                INIFile.WRITE_iniFile(pathFileSpec, cbMahangSet.Text, "Spec_Sodiemdo", cbSodiemdo.Text);
-                INIFile.WRITE_iniFile(pathFileSpec, cbMahangSet.Text, "Spec_Max_Min", tbMax_Min.Text);
-                if (SellectMax_Min == 1)
-                {
-                    INIFile.WRITE_iniFile(pathFileSpec, cbMahangSet.Text, "Select_Check", "1");
-                }
-                else if (SellectMax_Min == 0) 
-                {
-                    INIFile.WRITE_iniFile(pathFileSpec, cbMahangSet.Text, "Select_Check", "0");
-                }
-                AskForRestart();
+                _LocalDatabaseMaHang.UpdateMaHang(cbMahangSet.Text, double.Parse(tbSpecMaxD1.Text), double.Parse(tbSpecMinD1.Text), double.Parse(tbSpecMaxD2.Text), double.Parse(tbSpecMinD2.Text), double.Parse(tbSpecMaxD3.Text), double.Parse(tbSpecMinD3.Text), int.Parse(cbSodiemdo.SelectedValue.ToString()), double.Parse(tbMax_Min.Text), cbSellectMax_Min.Checked, Chb_ChekcMau.Checked);
+                ReadListMaHang();
+                MessageBox.Show( "Đã Lưu Thành Công", "Thông Báo", MessageBoxButtons.OK);
+                //AskForRestart();
             }
             catch (Exception ex)
             {
@@ -714,29 +741,56 @@ namespace DoDoCung
         private void cbMahangSet_SelectedIndexChanged(object sender, EventArgs e)
         {
             ComboBox bb = (ComboBox)sender;
-
-            LoadSpecMaHang(bb.SelectedIndex);
-
-            
-
+            if(bb.SelectedIndex>=0) LoadSpecMaHang(bb.SelectedIndex);
         }
-
-       
+        private void btnAddMaHang_Click(object sender, EventArgs e)
+        {
+            foreach(var item in cbMahangSet.Items)
+            {
+               if( cbMahangSet.Text == item.ToString())
+               {
+                    return;
+               }
+            }
+            _LocalDatabaseMaHang.AddMaHang(cbMahangSet.Text,double.Parse( tbSpecMaxD1.Text), double.Parse(tbSpecMinD1.Text), double.Parse(tbSpecMaxD2.Text), double.Parse(tbSpecMinD2.Text), double.Parse(tbSpecMaxD3.Text), double.Parse(tbSpecMinD3.Text),int.Parse( cbSodiemdo.SelectedValue.ToString()), double.Parse(tbMax_Min.Text), cbSellectMax_Min.Checked, Chb_ChekcMau.Checked);
+            ReadListMaHang();
+            MessageBox.Show("Thêm Mã Hàng Thành Công","Thông Báo", MessageBoxButtons.OK);
+        }
+        #endregion
 
         private void cbMahangrun_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string _SpecMaxD1 = INIFile.READ_iniFile(pathFileSpec, cbMahangrun.Text, "Spec_Max_D1");   // Load DD 6
-            tbMaxD1_Main.Text = _SpecMaxD1;
-            string _SpecMinD1 = INIFile.READ_iniFile(pathFileSpec, cbMahangrun.Text, "Spec_Min_D1");   // Load DD 6
-            tbMinD1_Main.Text = _SpecMinD1;
-            string _SpecMaxD2 = INIFile.READ_iniFile(pathFileSpec, cbMahangrun.Text, "Spec_Max_D2");   // Load DD 6
-            tbMaxD2_Main.Text = _SpecMaxD2;
-            string _SpecMinD2 = INIFile.READ_iniFile(pathFileSpec, cbMahangrun.Text, "Spec_Min_D2");   // Load DD 6
-            tbMinD2_Main.Text = _SpecMinD2;
-            string _SpecMaxD3 = INIFile.READ_iniFile(pathFileSpec, cbMahangrun.Text, "Spec_Max_D3");   // Load DD 6
-            tbMaxD3_Main.Text = _SpecMaxD3;
-            string _SpecMinD3 = INIFile.READ_iniFile(pathFileSpec, cbMahangrun.Text, "Spec_Min_D3");   // Load DD 6
-            tbMinD3_Main.Text = _SpecMinD3;
+            ComboBox bb = (ComboBox)sender;
+            if (bb.SelectedIndex>=0) LoadSpecMaHangAuto(bb.SelectedIndex);
+        }
+        private void LoadSpecMaHangAuto(int index)
+        {
+            max_R1 = max_L1 = double.Parse(tableMaHang.Rows[index][2].ToString());
+            min_R1 = min_L1 = double.Parse(tableMaHang.Rows[index][3].ToString());
+            max_R2 = max_L2 = double.Parse(tableMaHang.Rows[index][4].ToString());
+            min_R2 = min_L2 = double.Parse(tableMaHang.Rows[index][5].ToString());
+            max_R3 = max_L3 = double.Parse(tableMaHang.Rows[index][6].ToString());
+            min_R3 = min_L3 = double.Parse(tableMaHang.Rows[index][7].ToString());
+            AU_Sodiemdo = int.Parse(tableMaHang.Rows[index][8].ToString());
+            AU_MaxSubMin = double.Parse(tableMaHang.Rows[index][9].ToString());
+            AU_Select_MaxSubMin = bool.Parse(tableMaHang.Rows[index][10].ToString());
+            AU_Select_DoMau = bool.Parse(tableMaHang.Rows[index][11].ToString());
+            tbMaxD1_Main.Text = max_R1.ToString();
+            tbMinD1_Main.Text = min_R1.ToString();
+            tbMaxD2_Main.Text = max_R2.ToString();
+            tbMinD2_Main.Text = min_R2.ToString();
+            tbMaxD3_Main.Text = max_R3.ToString();
+            tbMinD3_Main.Text = min_R3.ToString();
+        }
+
+        public DataTable SetColumnsHeaderName(List<string> header)
+        {
+            DataTable dt = new DataTable();
+            foreach (var item in header.ToArray())
+            {
+                dt.Columns.Add(item);
+            }
+            return dt;
         }
         private void CheckConnectPLC()
         {

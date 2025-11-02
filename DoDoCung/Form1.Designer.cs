@@ -199,12 +199,12 @@
             // 
             // timer1
             // 
-            this.timer1.Interval = 200;
+            this.timer1.Interval = 50;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // tabSelect
             // 
-            this.tabSelect.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            this.tabSelect.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tabSelect.Controls.Add(this.tabMain);
             this.tabSelect.Controls.Add(this.tabSpec);
@@ -818,17 +818,21 @@
             // 
             // tbMinD3_Main
             // 
+            this.tbMinD3_Main.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.tbMinD3_Main.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tbMinD3_Main.Location = new System.Drawing.Point(776, 130);
             this.tbMinD3_Main.Name = "tbMinD3_Main";
+            this.tbMinD3_Main.ReadOnly = true;
             this.tbMinD3_Main.Size = new System.Drawing.Size(128, 29);
             this.tbMinD3_Main.TabIndex = 81;
             // 
             // tbMaxD3_Main
             // 
+            this.tbMaxD3_Main.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.tbMaxD3_Main.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tbMaxD3_Main.Location = new System.Drawing.Point(776, 74);
             this.tbMaxD3_Main.Name = "tbMaxD3_Main";
+            this.tbMaxD3_Main.ReadOnly = true;
             this.tbMaxD3_Main.Size = new System.Drawing.Size(128, 29);
             this.tbMaxD3_Main.TabIndex = 80;
             // 
@@ -864,17 +868,21 @@
             // 
             // tbMinD2_Main
             // 
+            this.tbMinD2_Main.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.tbMinD2_Main.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tbMinD2_Main.Location = new System.Drawing.Point(460, 130);
             this.tbMinD2_Main.Name = "tbMinD2_Main";
+            this.tbMinD2_Main.ReadOnly = true;
             this.tbMinD2_Main.Size = new System.Drawing.Size(128, 29);
             this.tbMinD2_Main.TabIndex = 76;
             // 
             // tbMaxD2_Main
             // 
+            this.tbMaxD2_Main.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.tbMaxD2_Main.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tbMaxD2_Main.Location = new System.Drawing.Point(460, 74);
             this.tbMaxD2_Main.Name = "tbMaxD2_Main";
+            this.tbMaxD2_Main.ReadOnly = true;
             this.tbMaxD2_Main.Size = new System.Drawing.Size(128, 29);
             this.tbMaxD2_Main.TabIndex = 75;
             // 
@@ -910,17 +918,21 @@
             // 
             // tbMinD1_Main
             // 
+            this.tbMinD1_Main.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.tbMinD1_Main.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tbMinD1_Main.Location = new System.Drawing.Point(165, 130);
             this.tbMinD1_Main.Name = "tbMinD1_Main";
+            this.tbMinD1_Main.ReadOnly = true;
             this.tbMinD1_Main.Size = new System.Drawing.Size(128, 29);
             this.tbMinD1_Main.TabIndex = 71;
             // 
             // tbMaxD1_Main
             // 
+            this.tbMaxD1_Main.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.tbMaxD1_Main.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tbMaxD1_Main.Location = new System.Drawing.Point(165, 74);
             this.tbMaxD1_Main.Name = "tbMaxD1_Main";
+            this.tbMaxD1_Main.ReadOnly = true;
             this.tbMaxD1_Main.Size = new System.Drawing.Size(128, 29);
             this.tbMaxD1_Main.TabIndex = 70;
             // 
@@ -956,7 +968,6 @@
             // 
             // tabSpec
             // 
-            this.tabSpec.Controls.Add(this.button1);
             this.tabSpec.Controls.Add(this.txb_MaHangMoi);
             this.tabSpec.Controls.Add(this.label42);
             this.tabSpec.Controls.Add(this.grSpec);
@@ -975,34 +986,37 @@
             this.button1.BackColor = System.Drawing.Color.Blue;
             this.button1.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.button1.ForeColor = System.Drawing.Color.Transparent;
-            this.button1.Location = new System.Drawing.Point(1248, 146);
+            this.button1.Location = new System.Drawing.Point(905, 233);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(165, 39);
+            this.button1.Size = new System.Drawing.Size(170, 67);
             this.button1.TabIndex = 88;
             this.button1.Text = "Thêm Mã Hàng";
             this.button1.UseVisualStyleBackColor = false;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.button1.Click += new System.EventHandler(this.btnAddMaHang_Click);
             // 
             // txb_MaHangMoi
             // 
             this.txb_MaHangMoi.Font = new System.Drawing.Font("Arial", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txb_MaHangMoi.Location = new System.Drawing.Point(1008, 150);
+            this.txb_MaHangMoi.Location = new System.Drawing.Point(467, 479);
             this.txb_MaHangMoi.Name = "txb_MaHangMoi";
             this.txb_MaHangMoi.Size = new System.Drawing.Size(219, 32);
             this.txb_MaHangMoi.TabIndex = 88;
+            this.txb_MaHangMoi.Visible = false;
             // 
             // label42
             // 
             this.label42.AutoSize = true;
             this.label42.Font = new System.Drawing.Font("Arial", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label42.Location = new System.Drawing.Point(839, 153);
+            this.label42.Location = new System.Drawing.Point(298, 482);
             this.label42.Name = "label42";
             this.label42.Size = new System.Drawing.Size(163, 27);
             this.label42.TabIndex = 71;
             this.label42.Text = "Mã Hàng Mới:";
+            this.label42.Visible = false;
             // 
             // grSpec
             // 
+            this.grSpec.Controls.Add(this.button1);
             this.grSpec.Controls.Add(this.Chb_ChekcMau);
             this.grSpec.Controls.Add(this.label41);
             this.grSpec.Controls.Add(this.btSavespec);
@@ -1026,7 +1040,7 @@
             this.grSpec.Controls.Add(this.label12);
             this.grSpec.Controls.Add(this.label20);
             this.grSpec.Controls.Add(this.label21);
-            this.grSpec.Location = new System.Drawing.Point(293, 207);
+            this.grSpec.Location = new System.Drawing.Point(292, 140);
             this.grSpec.Name = "grSpec";
             this.grSpec.Size = new System.Drawing.Size(1269, 306);
             this.grSpec.TabIndex = 70;
@@ -1035,10 +1049,11 @@
             // 
             // Chb_ChekcMau
             // 
+            this.Chb_ChekcMau.AutoSize = true;
             this.Chb_ChekcMau.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Chb_ChekcMau.Location = new System.Drawing.Point(215, 244);
             this.Chb_ChekcMau.Name = "Chb_ChekcMau";
-            this.Chb_ChekcMau.Size = new System.Drawing.Size(17, 18);
+            this.Chb_ChekcMau.Size = new System.Drawing.Size(15, 14);
             this.Chb_ChekcMau.TabIndex = 87;
             this.Chb_ChekcMau.UseVisualStyleBackColor = true;
             // 
@@ -1129,7 +1144,7 @@
             // 
             this.label25.AutoSize = true;
             this.label25.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label25.Location = new System.Drawing.Point(828, 28);
+            this.label25.Location = new System.Drawing.Point(906, 27);
             this.label25.Name = "label25";
             this.label25.Size = new System.Drawing.Size(106, 22);
             this.label25.TabIndex = 77;
@@ -1139,7 +1154,7 @@
             // 
             this.label26.AutoSize = true;
             this.label26.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label26.Location = new System.Drawing.Point(828, 66);
+            this.label26.Location = new System.Drawing.Point(906, 65);
             this.label26.Name = "label26";
             this.label26.Size = new System.Drawing.Size(131, 22);
             this.label26.TabIndex = 78;
@@ -1149,7 +1164,7 @@
             // 
             this.label27.AutoSize = true;
             this.label27.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label27.Location = new System.Drawing.Point(828, 111);
+            this.label27.Location = new System.Drawing.Point(906, 110);
             this.label27.Name = "label27";
             this.label27.Size = new System.Drawing.Size(136, 22);
             this.label27.TabIndex = 79;
@@ -1247,7 +1262,7 @@
             // 
             this.cbMahangSet.Font = new System.Drawing.Font("Arial", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.cbMahangSet.FormattingEnabled = true;
-            this.cbMahangSet.Location = new System.Drawing.Point(410, 150);
+            this.cbMahangSet.Location = new System.Drawing.Point(409, 83);
             this.cbMahangSet.Name = "cbMahangSet";
             this.cbMahangSet.Size = new System.Drawing.Size(356, 32);
             this.cbMahangSet.TabIndex = 67;
@@ -1257,7 +1272,7 @@
             // 
             this.label11.AutoSize = true;
             this.label11.Font = new System.Drawing.Font("Arial", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label11.Location = new System.Drawing.Point(289, 154);
+            this.label11.Location = new System.Drawing.Point(288, 87);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(116, 27);
             this.label11.TabIndex = 51;

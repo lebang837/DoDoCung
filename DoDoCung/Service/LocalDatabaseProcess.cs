@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace DoDoCung.Service
 {
@@ -37,8 +38,9 @@ namespace DoDoCung.Service
         {
             try
             {
+                int y = -1;
                 OpenConnect();
-                using (SqlCommand sqlCommand = new SqlCommand("Insert into TableMaHang (NameMaHang,Spec_Max_D1,Spec_Min_D1,Spec_Max_D2,Spec_Min_D2,Spec_Max_D3,Spec_Min_D3,Spec_Sodiemdo,Spec_MaxSubMin,Select_MaxSubMin,Select_DoMau)  Values(@NameMaHang,@Spec_Max_D1,@Spec_Min_D1,@Spec_Max_D2,@Spec_Min_D2,@Spec_Max_D3,@Spec_Min_D3,@Spec_Sodiemdo,@Spec_MaxSubMin,@Select_MaxSubMin,@Select_DoMau)", this.Conn))
+                using (SqlCommand sqlCommand = new SqlCommand("INSERT INTO TableMaHang (NameMaHang,Spec_Max_D1,Spec_Min_D1,Spec_Max_D2,Spec_Min_D2,Spec_Max_D3,Spec_Min_D3,Spec_Sodiemdo,Spec_MaxSubMin,Select_MaxSubMin,Select_DoMau) Values (@NameMaHang,@Spec_Max_D1,@Spec_Min_D1,@Spec_Max_D2,@Spec_Min_D2,@Spec_Max_D3,@Spec_Min_D3,@Spec_Sodiemdo,@Spec_MaxSubMin,@Select_MaxSubMin,@Select_DoMau)", this.Conn))
                 {
                     sqlCommand.Parameters.AddWithValue("@NameMaHang", NameMaHang);
                     sqlCommand.Parameters.AddWithValue("@Spec_Max_D1", Spec_Max_D1);
@@ -51,13 +53,14 @@ namespace DoDoCung.Service
                     sqlCommand.Parameters.AddWithValue("@Spec_MaxSubMin", Spec_MaxSubMin);
                     sqlCommand.Parameters.AddWithValue("@Select_MaxSubMin", Select_MaxSubMin);
                     sqlCommand.Parameters.AddWithValue("@Select_DoMau", Select_DoMau);
-                    sqlCommand.ExecuteNonQuery();
+                    y= sqlCommand.ExecuteNonQuery();
+                    sqlCommand.Parameters.AddWithValue("@Select_DoMau", Select_DoMau);
                 }
                 DisConnect();
             }
             catch (Exception ex)
             {
-
+                MessageBox.Show("hhh");
             }
         }
 
@@ -94,7 +97,7 @@ namespace DoDoCung.Service
         {
             DataTable _table = new DataTable();
             OpenConnect();
-            using (SqlDataAdapter adapter = new SqlDataAdapter("SELECT * FROM TableMaHang", Conn))
+            using (SqlDataAdapter adapter = new SqlDataAdapter("SELECT * FROM TableMaHang ORDER BY Id ASC; ", Conn))
             {
                 adapter.Fill(_table);
             }

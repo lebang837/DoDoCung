@@ -49,8 +49,8 @@ namespace DoDoCung.Utilities
             {
                 return res;
             }
-            Port.DiscardInBuffer();
-            Port.DiscardOutBuffer();
+            //Port.DiscardInBuffer();
+            //Port.DiscardOutBuffer();
             Port.WriteLine("D");  // sẽ tự động thêm CRLF vì NewLine = "\r\n"
 
             ReadDiaThread.Start(); //Start thread cho đọc dữ liệu
@@ -60,8 +60,9 @@ namespace DoDoCung.Utilities
                 ReadDiaThread.Abort();
                // throw new InvalidOperationException("Read Data Over Time");
             }
-
+            Console.WriteLine(_ReceDataDC);
             if (value1 > -1) { res = value1; }
+            Console.WriteLine("Da XOng)");
             return res;
         }
 
