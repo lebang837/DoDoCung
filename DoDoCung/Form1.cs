@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Reflection;
@@ -223,6 +224,7 @@ namespace DoDoCung
             if (GaugesAsync1 != null) taskList.Add(GaugesAsync1);
             if (GaugesAsync2 != null) taskList.Add(GaugesAsync2);
 
+            string path = AppDomain.CurrentDomain.BaseDirectory + cbLot.Text + ".xlsx";
             if (taskList.Count > 0)
             {
                 results = await Task.WhenAll(taskList);
@@ -234,6 +236,8 @@ namespace DoDoCung
                 }
                 CounterProduction++;
                 tableLogData.Rows.Add(new string[] { CounterProduction.ToString(), MaHangCurrent.ToString(), DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"), ResultTruc1, value_D1?.ToString("0.0000"), value_D2?.ToString("0.0000"), value_D3?.ToString("0.0000") });
+               
+                ExportExcel.Write1LineData(tableLogData, path, CounterProduction.ToString(), MaHangCurrent.ToString(), ResultTruc1, value_D1?.ToString("0.0000"), value_D2?.ToString("0.0000"), value_D3?.ToString("0.0000"));
             }
 
             if (PLC_2 == 1 )
@@ -247,6 +251,7 @@ namespace DoDoCung
                 else if (res == 2) {cmd_PLC.BatchWrites(DataFormat.Word, DeviceCode.D, 4502, new ushort[] { 2, 2 }); ResultTruc2 = "NG"; }
                 CounterProduction++;
                 tableLogData.Rows.Add(new string[] { CounterProduction.ToString(), MaHangCurrent.ToString(), DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"), ResultTruc2, value_D4?.ToString("0.0000"), value_D5?.ToString("0.0000"), value_D6?.ToString("0.0000") });
+                ExportExcel.Write1LineData(tableLogData, path, CounterProduction.ToString(), MaHangCurrent.ToString(), ResultTruc1, value_D1?.ToString("0.0000"), value_D2?.ToString("0.0000"), value_D3?.ToString("0.0000"));
             }
                 
 
