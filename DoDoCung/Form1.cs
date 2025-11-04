@@ -30,15 +30,9 @@ namespace DoDoCung
         string pathFileSpec = AppDomain.CurrentDomain.BaseDirectory + @"FILE\SpecFile.ini";
         short DATA_MODEL = 0;
         private double? value_D1 = 0, value_D2 = 0, value_D3 = 0, value_D4 = 0, value_D5 = 0, value_D6 = 0;
-        int kQsanpham1;
-        int kQsanpham2;
-        int kQ_L1;
-        int kQ_L2;
-        int kQ_L3;
-
-        int kQ_R1;
-        int kQ_R2;
-        int kQ_R3;
+        int kQsanpham1, kQsanpham2;
+        int kQ_L1, kQ_L2, kQ_L3;
+        int kQ_R1, kQ_R2, kQ_R3;
         SerialPort[] ports;
         Label[] statusLabels;
         bool isRestarting = false; // cờ kiểm soát việc khởi động lại
@@ -56,9 +50,6 @@ namespace DoDoCung
         string MaHangCurrent = "";
         string ResultTruc1 = "";
         string ResultTruc2 = "";
-
-
-        DoCungMeter Meter01, Meter02, Meter03, Meter04, Meter05, Meter06;
         private readonly Dictionary<int, string> modelMapping = new Dictionary<int, string>()
         {
             { 1, "1182" },
@@ -70,17 +61,20 @@ namespace DoDoCung
             // thêm nếu có nữa
         };
 
+        DoCungMeter Meter01, Meter02, Meter03, Meter04, Meter05, Meter06;
         BindingList<string>ListMahang = new BindingList<string> {};
+        DataTable tableLogData = new DataTable();
         double Spec_Max_D1 = 0, Spec_Min_D1 = 0, Spec_Max_D2 = 0, Spec_Min_D2 = 0, Spec_Max_D3 = 0, Spec_Min_D3 = 0, Spec_MaxSubMin=0;
         int Spec_Sodiemdo = 0;
         bool Spec_Select_MaxSubMin=false, Spec_Select_DoMau=false;
-        DataTable tableLogData = new DataTable();
-        int CounterProduction = 0;
+        
+        int STTProduction = 0;
         double max_L1, min_L1, max_L3, min_L3, max_L2, min_L2;
         double max_R3, min_R3, max_R2, min_R2, max_R1, min_R1;
         int AU_Sodiemdo;
         double AU_MaxSubMin;
         bool AU_Select_MaxSubMin, AU_Select_DoMau;
+        int ModeRunFromPLC = 0;
 
         public frmDDC()
         {
@@ -88,9 +82,6 @@ namespace DoDoCung
             this.KeyPreview = true;
            
         }
-
-
-
 
         private void frmDDC_Load(object sender, EventArgs e)
         {
@@ -153,53 +144,53 @@ namespace DoDoCung
         private async void timer1_Tick(object sender, EventArgs e)
         {
             timer1.Enabled = false;
-            string[] dataHex;
-            string[] sttModel;
-            Task<(string[], string[], string[])> taskReadPLC = new Task<(string[], string[], string[])>(() =>
+            string[] dataHex = new string[20];
+            short[] _data_int_PLC = new short[30];
+            Task<string[]> taskReadPLC = new Task<string[]>(() =>
             {
                 string[] _data_string_plc = cmd_PLC.BatchReads(DataFormat.Word, DeviceCode.D, 4500, 30);
-                string[] _dataHex = new string[] { "1" };// cmd_PLC.BatchReads(DataFormat.Word, DeviceCode.D, 4510, 16);
-                string[] _sttModel = new string[] { "1" };// = cmd_PLC.BatchReads(DataFormat.Word, DeviceCode.D, 4540, 1);
-                return (_data_string_plc, _dataHex, _sttModel);
+                //string[] _dataHex =  cmd_PLC.BatchReads(DataFormat.Word, DeviceCode.D, 4510, 16);
+                //string[] _sttModel =  = cmd_PLC.BatchReads(DataFormat.Word, DeviceCode.D, 4540, 1);
+                return _data_string_plc;
             });
              taskReadPLC.Start();
             await taskReadPLC;
 
 
-            (data_string_plc , dataHex, sttModel) = taskReadPLC.Result;
-            short[] _data_int_PLC = new short[20];
+            data_string_plc = taskReadPLC.Result;
+            
             if (data_string_plc != null && data_string_plc.Length == 30)
             {
                 _data_int_PLC = cmd_PLC.HexaToArrayInt16(data_string_plc);
+                Array.Copy(data_string_plc, 10, dataHex, 0, 20);
+
+                //Load Mã Hàng Từ PLC
+                if (dataHex != null && dataHex.Length > 0)
+                {
+                    string lotName = ConvertPLCWordsToString(dataHex);
+                    MaHangCurrent = lotName;
+                    cbLot.Text = MaHangCurrent;     //Hiển thị lên Label
+                }
+
+                //Load Model tu PLC
+                DATA_MODEL = _data_int_PLC[9];
+                if (modelMapping.TryGetValue(DATA_MODEL, out string modelName))
+                {
+                    cbMahangrun.Text = modelName; // hiển thị mã hàng tương ứng
+                }
+                else
+                {
+                    cbMahangrun.Text = ""; // hoặc ""
+                }
+                //Load Chế Độ Chạy từ PLC
+                ModeRunFromPLC = _data_int_PLC[8];
+            }
+            else
+            {
+                return;
             }
 
             await Doc_XyLy_DoCung(_data_int_PLC[0], _data_int_PLC[2]);
-
-
-
-            //Load Mã Hàng Từ PLC
-            //if (dataHex != null && dataHex.Length > 0)
-            //{
-            //    string lotName = ConvertPLCWordsToString(dataHex);
-            //    MaHangCurrent = lotName;
-            //    cbLot.Text = MaHangCurrent;     //Hiển thị lên Label
-            //}
-
-
-            //
-            //if (sttModel != null && sttModel.Length == 1)
-            //{
-            //    short[] _sttModel = cmd_PLC.HexaToArrayInt16(sttModel);
-            //    DATA_MODEL = _sttModel[0];
-            //    if (modelMapping.TryGetValue(DATA_MODEL, out string modelName))
-            //    {
-            //        cbMahangrun.Text = modelName; // hiển thị mã hàng tương ứng
-            //    }
-            //    else
-            //    {
-            //        cbMahangrun.Text = ""; // hoặc ""
-            //    }
-            //}
 
 
             timer1.Enabled = true;
@@ -230,14 +221,14 @@ namespace DoDoCung
                 results = await Task.WhenAll(taskList);
             if (PLC_0 == 1)
             {
-                    if (results[0] == 3) { cmd_PLC.BatchWrites(DataFormat.Word, DeviceCode.D, 4500, new ushort[] { 2, 3 }); ResultTruc1 = "RECHECK"; }
-                    else if (results[0] == 1) { cmd_PLC.BatchWrites(DataFormat.Word, DeviceCode.D, 4500, new ushort[] { 2, 1 }); ResultTruc1 = "OK"; }
-                    else if (results[0] == 2) { cmd_PLC.BatchWrites(DataFormat.Word, DeviceCode.D, 4500, new ushort[] { 2, 2 }); ResultTruc1 = "NG"; }
+                    if (results[0] == 3)      { PLCWrite(DataFormat.Word, DeviceCode.D, 4500, new ushort[] { 2, 3 }); ResultTruc1 = "RECHECK"; }
+                    else if (results[0] == 1) { PLCWrite(DataFormat.Word, DeviceCode.D, 4500, new ushort[] { 2, 1 }); ResultTruc1 = "OK"; }
+                    else if (results[0] == 2) { PLCWrite(DataFormat.Word, DeviceCode.D, 4500, new ushort[] { 2, 2 }); ResultTruc1 = "NG"; }
                 }
-                CounterProduction++;
-                tableLogData.Rows.Add(new string[] { CounterProduction.ToString(), MaHangCurrent.ToString(), DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"), ResultTruc1, value_D1?.ToString("0.0000"), value_D2?.ToString("0.0000"), value_D3?.ToString("0.0000") });
-               
-                ExportExcel.Write1LineData(tableLogData, path, CounterProduction.ToString(), MaHangCurrent.ToString(), ResultTruc1, value_D1?.ToString("0.0000"), value_D2?.ToString("0.0000"), value_D3?.ToString("0.0000"));
+                STTProduction++;
+                tableLogData.Rows.Add(new string[] { STTProduction.ToString(), MaHangCurrent.ToString(), DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"), ResultTruc1, value_D1?.ToString("0.0000"), value_D2?.ToString("0.0000"), value_D3?.ToString("0.0000") });
+                ExportExcel.Write1LineData(tableLogData, path, STTProduction.ToString(), MaHangCurrent.ToString(), ResultTruc1, value_D1?.ToString("0.0000"), value_D2?.ToString("0.0000"), value_D3?.ToString("0.0000"));
+           
             }
 
             if (PLC_2 == 1 )
@@ -246,12 +237,12 @@ namespace DoDoCung
                 if (PLC_0 != 1) res= results[0];
                 if (PLC_0 == 1) res = results[1];
 
-                if (res == 3) {cmd_PLC.BatchWrites(DataFormat.Word, DeviceCode.D, 4502, new ushort[] { 2, 3 }); ResultTruc2 = "RECHECK";}
-                else if (res == 1) {cmd_PLC.BatchWrites(DataFormat.Word, DeviceCode.D, 4502, new ushort[] { 2, 1 }); ResultTruc2 = "OK";}
-                else if (res == 2) {cmd_PLC.BatchWrites(DataFormat.Word, DeviceCode.D, 4502, new ushort[] { 2, 2 }); ResultTruc2 = "NG"; }
-                CounterProduction++;
-                tableLogData.Rows.Add(new string[] { CounterProduction.ToString(), MaHangCurrent.ToString(), DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"), ResultTruc2, value_D4?.ToString("0.0000"), value_D5?.ToString("0.0000"), value_D6?.ToString("0.0000") });
-                ExportExcel.Write1LineData(tableLogData, path, CounterProduction.ToString(), MaHangCurrent.ToString(), ResultTruc1, value_D1?.ToString("0.0000"), value_D2?.ToString("0.0000"), value_D3?.ToString("0.0000"));
+                if (res == 3) { PLCWrite(DataFormat.Word, DeviceCode.D, 4502, new ushort[] { 2, 3 }); ResultTruc2 = "RECHECK";}
+                else if (res == 1) { PLCWrite(DataFormat.Word, DeviceCode.D, 4502, new ushort[] { 2, 1 }); ResultTruc2 = "OK";}
+                else if (res == 2) { PLCWrite(DataFormat.Word, DeviceCode.D, 4502, new ushort[] { 2, 2 }); ResultTruc2 = "NG"; }
+                STTProduction++;
+                tableLogData.Rows.Add(new string[] { STTProduction.ToString(), MaHangCurrent.ToString(), DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"), ResultTruc2, value_D4?.ToString("0.0000"), value_D5?.ToString("0.0000"), value_D6?.ToString("0.0000") });
+                ExportExcel.Write1LineData(tableLogData, path, STTProduction.ToString(), MaHangCurrent.ToString(), ResultTruc1, value_D1?.ToString("0.0000"), value_D2?.ToString("0.0000"), value_D3?.ToString("0.0000"));
             }
                 
 
@@ -260,7 +251,16 @@ namespace DoDoCung
 
         }
 
-
+        bool PLCWrite(DataFormat dataFormat, DeviceCode deviceCode,uint address, ushort[] _data )
+        {
+            bool res=false;
+            for(int i = 0; i < 5; i++)
+            {
+               res = cmd_PLC.BatchWrites(dataFormat, deviceCode, address, _data);
+               if (res) break;
+            }
+            return res;
+        }
         
         private async void btTest_Click(object sender, EventArgs e)
         {
